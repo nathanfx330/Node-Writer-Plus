@@ -16,5 +16,5 @@ A distraction-free, nonlinear writing tool built with Flutter. Node Writer allow
 1. **Prerequisites**: Ensure you have [Flutter](https://flutter.dev/docs/get-started/install) installed.
 2. **Clone the repo**:
    ```bash
-   git clone https://github.com/yourusername/node-writer.git
+   git clone https://github.com/nathanfx330/node-writer.git
    cd node-writer
