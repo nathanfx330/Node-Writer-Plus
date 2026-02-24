@@ -1287,40 +1287,105 @@ class _SidePanelState extends State<SidePanel> {
 
 class PreviewPanel extends StatelessWidget {
   const PreviewPanel({super.key});
+
+  // Helper method to generate clean text for copying/exporting
+  String _getCompiledRawText(List<StoryNode> nodes) {
+    StringBuffer buffer = StringBuffer();
+    for (var node in nodes) {
+      if (node.type == NodeType.output) continue;
+      buffer.writeln(node.title.toUpperCase());
+      buffer.writeln(node.content);
+      buffer.writeln("\n---\n"); // Separator between nodes
+    }
+    return buffer.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ProjectState>();
     final nodes = _getCompiledNodes(state);
+
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(15), color: kAccentColor.withOpacity(0.1), width: double.infinity,
-          child: Row(children: [
-            const Text("STORY PREVIEW", style: TextStyle(color: kAccentColor, fontWeight: FontWeight.bold)),
-            const Spacer(),
-            if (state.previewNodeId != null) IconButton(icon: const Icon(Icons.close), onPressed: () => state.setPreviewNode(null))
-          ]),
+          padding: const EdgeInsets.all(15), 
+          color: kAccentColor.withOpacity(0.1), 
+          width: double.infinity,
+          child: Row(
+            children: [
+              const Text("STORY PREVIEW", style: TextStyle(color: kAccentColor, fontWeight: FontWeight.bold)),
+              const Spacer(),
+              
+              // 1. COPY TO CLIPBOARD BUTTON
+              IconButton(
+                icon: const Icon(Icons.copy, size: 20, color: kAccentColor),
+                tooltip: "Copy Compiled Text",
+                onPressed: () {
+                  final text = _getCompiledRawText(nodes);
+                  Clipboard.setData(ClipboardData(text: text));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Story copied to clipboard!"), duration: Duration(seconds: 2)),
+                  );
+                },
+              ),
+
+              // 2. EXPORT AS .TXT FILE BUTTON
+              IconButton(
+                icon: const Icon(Icons.download, size: 20, color: kAccentColor),
+                tooltip: "Export as .txt",
+                onPressed: () async {
+                  final text = _getCompiledRawText(nodes);
+                  String? outputFile = await FilePicker.platform.saveFile(
+                    dialogTitle: 'Export Story',
+                    fileName: '${state.projectName}_export.txt',
+                    type: FileType.custom,
+                    allowedExtensions: ['txt', 'md'],
+                  );
+
+                  if (outputFile != null) {
+                    if (!outputFile.endsWith('.txt') && !outputFile.endsWith('.md')) {
+                      outputFile += '.txt';
+                    }
+                    await File(outputFile).writeAsString(text);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Exported to $outputFile"), duration: const Duration(seconds: 3)),
+                      );
+                    }
+                  }
+                },
+              ),
+
+              if (state.previewNodeId != null) 
+                IconButton(icon: const Icon(Icons.close), onPressed: () => state.setPreviewNode(null))
+            ]
+          ),
         ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(30), itemCount: nodes.length,
-            itemBuilder: (ctx, i) {
-              final node = nodes[i];
-              if (node.type == NodeType.output) return const SizedBox(height: 50, child: Divider());
-              
-              final baseStyle = _getFontStyle(node.fontFamily).copyWith(fontSize: 16, height: 1.6, color: Colors.white70);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(node.title.toUpperCase(), style: const TextStyle(color: Colors.grey, fontSize: 10, letterSpacing: 1.5)),
-                  const SizedBox(height: 8),
-                  SelectableText.rich(
-                    _parseMarkdown(node.content, baseStyle),
-                    textAlign: node.textAlign,
-                  ),
-                ]),
-              );
-            },
+          // 3. SELECTION AREA: This allows you to drag and select text across multiple nodes!
+          child: SelectionArea(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(30), 
+              itemCount: nodes.length,
+              itemBuilder: (ctx, i) {
+                final node = nodes[i];
+                if (node.type == NodeType.output) return const SizedBox(height: 50, child: Divider());
+                
+                final baseStyle = _getFontStyle(node.fontFamily).copyWith(fontSize: 16, height: 1.6, color: Colors.white70);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(node.title.toUpperCase(), style: const TextStyle(color: Colors.grey, fontSize: 10, letterSpacing: 1.5)),
+                    const SizedBox(height: 8),
+                    // CHANGED from SelectableText.rich to Text.rich so SelectionArea can handle the selection
+                    Text.rich(
+                      _parseMarkdown(node.content, baseStyle),
+                      textAlign: node.textAlign,
+                    ),
+                  ]),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -1356,6 +1421,7 @@ class PreviewPanel extends StatelessWidget {
       default: return const TextStyle(fontFamily: 'Roboto');
     }
   }
+
   List<StoryNode> _getCompiledNodes(ProjectState state) {
     String? curr = state.previewNodeId;
     if (curr == null) {
