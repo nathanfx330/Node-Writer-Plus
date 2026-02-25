@@ -1,6 +1,10 @@
 # Node Writer
 https://nathanfx330.github.io/blog/posts/node-writer/
 
+![Node Writer Screenshot](https://nathanfx330.github.io/blog/posts/node-writer/nw-3.png)
+
+
+
 A distraction-free, nonlinear writing tool built with Flutter. Node Writer allows you to write stories using a visual node graph, perfect for interactive fiction, game scripts, or complex narrative planning.
 
 ## Features
