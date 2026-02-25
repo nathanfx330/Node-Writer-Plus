@@ -1,30 +1,55 @@
 # Node Writer
-https://nathanfx330.github.io/blog/posts/node-writer/
+
+🌐 https://nathanfx330.github.io/blog/posts/node-writer/
 
 ![Node Writer Screenshot](https://nathanfx330.github.io/blog/posts/node-writer/nw-3.png)
 
+**Node Writer** is a distraction-free, nonlinear writing tool built with Flutter.  
+It lets you construct stories visually using a node graph — ideal for interactive fiction, game scripting, branching narratives, or complex story planning.
 
-
-A distraction-free, nonlinear writing tool built with Flutter. Node Writer allows you to write stories using a visual node graph, perfect for interactive fiction, game scripts, or complex narrative planning.
+---
 
 ## Features
 
-- **Infinite Canvas**: Pan and zoom freely to organize your thoughts.
-- **Visual Branching**: Connect scenes with bezier curves to visualize flow.
-- **Rich Text Lite**: Support for **bold** and *italics* with a distraction-free syntax highlighter.
-- **Live Preview**: See your compiled story path in real-time as you select nodes.
-- **Custom Terminology**: Call your nodes Scenes, Passages, Beats, or Cards.
-- **Cross-Platform**: Runs natively on Linux, Windows, and macOS.
+- **Infinite Canvas**  
+  Pan and zoom freely to organize ideas in open space.
+
+- **Visual Branching**  
+  Connect scenes using Bézier curves to map narrative flow.
+
+- **Rich Text Lite**  
+  Supports **bold** and *italic* formatting with a clean, distraction-free editor.
+
+- **Live Preview**  
+  Instantly preview compiled story paths as nodes are selected.
+
+- **Custom Terminology**  
+  Rename nodes to fit your workflow — Scenes, Passages, Beats, Cards, or anything else.
+
+- **Cross-Platform**  
+  Runs natively on Linux, Windows, and macOS.
+
+---
 
 ## Getting Started
 
-1. **Prerequisites**: Ensure you have [Flutter](https://flutter.dev/docs/get-started/install) installed.
-2. **Clone the repo**:
-   ```bash
-   git clone https://github.com/nathanfx330/node-writer.git
-   cd node-writer
+### Prerequisites
+Install Flutter:
 
-   MIT License
+https://flutter.dev/docs/get-started/install
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/nathanfx330/node-writer.git
+cd node-writer
+````
+
+---
+
+## License
+
+MIT License
 
 Copyright (c) 2026 Nathaniel Westveer
 
