@@ -774,6 +774,7 @@ class _MainLayoutState extends State<MainLayout> {
 
 class TopBar extends StatelessWidget {
   const TopBar({super.key});
+  
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ProjectState>();
@@ -796,6 +797,11 @@ class TopBar extends StatelessWidget {
           const VerticalDivider(color: Colors.black, width: 20),
           _MenuButton(label: "Copy", onTap: () => state.copySelection()),
           _MenuButton(label: "Paste", onTap: () => state.paste()),
+          const VerticalDivider(color: Colors.black, width: 20),
+          
+          // ABOUT BUTTON
+          _MenuButton(label: "About", onTap: () => _showAboutDialog(context)),
+          
           const Spacer(),
           // SETTINGS BUTTON
           IconButton(
@@ -807,6 +813,42 @@ class TopBar extends StatelessWidget {
             icon: const Icon(Icons.delete, size: 18),
             onPressed: () => state.deleteSelected(),
             tooltip: "Delete Selected",
+          ),
+        ],
+      ),
+    );
+  }
+// ABOUT DIALOG WITH LOGO
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        
+        // ADDED: A nice balanced padding around the whole box
+        contentPadding: const EdgeInsets.only(top: 32, bottom: 24, left: 24, right: 24),
+        
+        // The title: Text("About") has been completely removed!
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/logo.png', height: 200),
+            const SizedBox(height: 5),
+            const Text(
+              "Node Writer 1.0",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "by Nathaniel Westveer",
+              style: TextStyle(fontSize: 14, color: Colors.white70),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Close", style: TextStyle(color: kAccentColor)),
           ),
         ],
       ),
