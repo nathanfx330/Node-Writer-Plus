@@ -41,8 +41,71 @@ https://flutter.dev/docs/get-started/install
 ### Clone the Repository
 
 ```bash
+Here’s the corrected **Getting Started** section with a proper Flutter build/run sequence added:
+
+````markdown
+## Getting Started
+
+### Prerequisites
+Install Flutter:
+
+https://flutter.dev/docs/get-started/install
+
+Verify installation:
+
+```bash
+flutter doctor
+````
+
+---
+
+### Clone the Repository
+
+```bash
 git clone https://github.com/nathanfx330/node-writer.git
 cd node-writer
+```
+
+---
+
+### Build & Run
+
+Fetch dependencies:
+
+```bash
+flutter pub get
+```
+
+Run the application:
+
+```bash
+flutter run
+```
+
+---
+
+### Build Release Version
+
+**Windows**
+
+```bash
+flutter build windows
+```
+
+**Linux**
+
+```bash
+flutter build linux
+```
+
+**macOS**
+
+```bash
+flutter build macos
+```
+
+```
+
 ````
 
 ---
