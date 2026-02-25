@@ -5,7 +5,7 @@
 ![Node Writer Screenshot](https://nathanfx330.github.io/blog/posts/node-writer/nw-3.png)
 
 **Node Writer** is a distraction-free, nonlinear writing tool built with Flutter.  
-It lets you construct stories visually using a node graph — ideal for interactive fiction, game scripting, branching narratives, or complex story planning.
+It enables visual story construction using a node graph — ideal for interactive fiction, game scripting, branching narratives, and complex story planning.
 
 ---
 
@@ -15,16 +15,16 @@ It lets you construct stories visually using a node graph — ideal for interact
   Pan and zoom freely to organize ideas in open space.
 
 - **Visual Branching**  
-  Connect scenes using Bézier curves to map narrative flow.
+  Connect scenes using Bézier curves to visualize narrative flow.
 
 - **Rich Text Lite**  
-  Supports **bold** and *italic* formatting with a clean, distraction-free editor.
+  Supports **bold** and *italic* formatting within a clean, distraction-free editor.
 
 - **Live Preview**  
-  Instantly preview compiled story paths as nodes are selected.
+  Preview compiled story paths instantly as nodes are selected.
 
 - **Custom Terminology**  
-  Rename nodes to fit your workflow — Scenes, Passages, Beats, Cards, or anything else.
+  Rename nodes to match your workflow — Scenes, Passages, Beats, Cards, or anything else.
 
 - **Cross-Platform**  
   Runs natively on Linux, Windows, and macOS.
@@ -34,24 +34,12 @@ It lets you construct stories visually using a node graph — ideal for interact
 ## Getting Started
 
 ### Prerequisites
+
 Install Flutter:
 
 https://flutter.dev/docs/get-started/install
 
-### Clone the Repository
-
-```bash
-Here’s the corrected **Getting Started** section with a proper Flutter build/run sequence added:
-
-````markdown
-## Getting Started
-
-### Prerequisites
-Install Flutter:
-
-https://flutter.dev/docs/get-started/install
-
-Verify installation:
+Verify your installation:
 
 ```bash
 flutter doctor
@@ -84,7 +72,7 @@ flutter run
 
 ---
 
-### Build Release Version
+### Build Release Versions
 
 **Windows**
 
@@ -102,8 +90,7 @@ flutter build linux
 
 ```bash
 flutter build macos
-
-````
+```
 
 ---
 
@@ -117,8 +104,8 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
