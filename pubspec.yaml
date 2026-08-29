@@ -1,10 +1,10 @@
 name: node_writer
 description: A nonlinear, node-based story editor built with Flutter.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.7.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.11.3
 
 dependencies:
   flutter:
@@ -16,15 +16,16 @@ dependencies:
   uuid: ^4.5.3
   # System file dialogs (Save As / Open)
   file_picker: ^10.3.10
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  shared_preferences: ^2.5.3
+  audioplayers: ^6.7.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  assets:
-    - assets/logo.png

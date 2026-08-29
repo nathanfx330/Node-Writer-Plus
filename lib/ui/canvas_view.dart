@@ -43,17 +43,39 @@ class _NodeCanvasState extends State<NodeCanvas> {
   @override
   Widget build(BuildContext context) {
     final state = context.read<ProjectState>();
-    return Focus(
-      focusNode: _canvasFocusNode,
-      autofocus: true,
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.tab) {
-          _showNodeSearchDialog();
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
+
+    // Graph editing keys are bound here, not at application level.
+    //
+    // Delete, Backspace, Ctrl+C, Ctrl+V and Ctrl+Z are all text editing keys
+    // too. Bound globally they sit below Flutter's DefaultTextEditingShortcuts
+    // in the tree and intercept the keystroke before the Scene editor ever
+    // sees it, so Backspace deletes the node instead of a character. Scoped to
+    // the canvas focus subtree they can only fire when the canvas has focus,
+    // which is exactly when they mean the graph rather than the manuscript.
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.delete): state.deleteSelected,
+        const SingleActivator(LogicalKeyboardKey.backspace):
+            state.deleteSelected,
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true):
+            state.undo,
+        const SingleActivator(LogicalKeyboardKey.keyC, control: true):
+            state.copySelection,
+        const SingleActivator(LogicalKeyboardKey.keyV, control: true):
+            state.paste,
       },
-      child: Listener(
+      child: Focus(
+        focusNode: _canvasFocusNode,
+        autofocus: true,
+        onKeyEvent: (node, event) {
+          if (event is KeyDownEvent &&
+              event.logicalKey == LogicalKeyboardKey.tab) {
+            _showNodeSearchDialog();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Listener(
         key: state.canvasKey,
         behavior: HitTestBehavior.opaque,
         onPointerHover: (event) {
@@ -80,6 +102,7 @@ class _NodeCanvasState extends State<NodeCanvas> {
                 items: [
                   PopupMenuItem(value: NodeType.scene, child: Text("Add ${state.unitLabel}")),
                   const PopupMenuItem(value: NodeType.merge, child: Text("Add Merge Node")),
+                  const PopupMenuItem(value: NodeType.ollama, child: Text("Add Ollama Output")),
                 ],
               ).then((type) {
                 if (type != null) state.addNode(canvasPos, type);
@@ -115,6 +138,7 @@ class _NodeCanvasState extends State<NodeCanvas> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
@@ -153,14 +177,17 @@ class _NodeVisualState extends State<NodeVisual> {
 
   TextSpan _getPreviewSpan(String content) {
     if (content.isEmpty) return const TextSpan(text: "// Empty", style: TextStyle(color: Colors.grey));
-    return TextSpan(text: content.length > 150 ? content.substring(0, 150) : content, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontFamily: 'monospace', height: 1.2));
+    return TextSpan(text: content.length > 150 ? content.substring(0, 150) : content, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11, fontFamily: 'monospace', height: 1.2));
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.read<ProjectState>();
     final nodeId = widget.nodeId;
-    final node = state.nodes[nodeId]!;
+    // The parent Stack rebuilds from the node map, but this element can be
+    // marked dirty in the same frame its node is deleted.
+    final node = state.nodes[nodeId];
+    if (node == null) return const SizedBox.shrink();
     
     final isSelected = context.select<ProjectState, bool>((s) => s.selectedNodeIds.contains(nodeId));
     final isActive = context.select<ProjectState, bool>((s) => s.activePathIds.contains(nodeId));
@@ -173,12 +200,14 @@ class _NodeVisualState extends State<NodeVisual> {
 
     final isOutput = node.type == NodeType.output;
     final isMerge = node.type == NodeType.merge;
+    final isOllama = node.type == NodeType.ollama;
     
     final double height = node.currentHeight;
-    final double borderRadius = (isOutput || isMerge) ? 30.0 : 12.0;
+    final double borderRadius = (isOutput || isMerge || isOllama) ? 30.0 : 12.0;
 
     Color headerColor = isActive ? const Color(0xFF335533) : const Color(0xFF333333);
     if (isOutput) headerColor = const Color(0xFF555555);
+    if (isOllama) headerColor = const Color(0xFF4A2A68);
     if (isPreview) headerColor = Colors.amber.shade900;
 
     Color borderColor = isSelected ? Colors.white : Colors.black;
@@ -241,11 +270,11 @@ class _NodeVisualState extends State<NodeVisual> {
       onPanEnd: (_) => state.onNodeDragEnd(nodeId),
       onPanUpdate: (d) => state.updateNodePosition(nodeId, d.delta),
       onTap: () => state.selectNode(nodeId, additive: HardwareKeyboard.instance.isShiftPressed),
-      onDoubleTap: () => state.setPreviewNode((isOutput || isMerge) ? null : nodeId),
+      onDoubleTap: () => state.setPreviewNode((isOutput || isMerge || isOllama) ? null : nodeId),
       onSecondaryTapUp: (details) => _showContextMenu(context, details.globalPosition, nodeId),
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 300),
-        opacity: isActive || isOutput || isMerge || isSelected || isPreview ? 1.0 : 0.7,
+        opacity: isActive || isOutput || isOllama || isMerge || isSelected || isPreview ? 1.0 : 0.7,
         child: Container(
           width: kNodeWidth, height: height,
           decoration: BoxDecoration(color: const Color(0xFF252525), borderRadius: BorderRadius.circular(borderRadius), border: Border.all(color: borderColor, width: (isSelected || isPreview) ? 2 : 1), boxShadow: shadows),
@@ -254,22 +283,35 @@ class _NodeVisualState extends State<NodeVisual> {
             children:[
               isOutput 
               ? const Center(child: Text("FINAL OUTPUT", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.5)))
-              : isMerge 
-                ? const Center(child: Text("MERGE", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.yellowAccent, letterSpacing: 1.5)))
-                : Column(
+              : isOllama
+                ? const Center(child: Text("OLLAMA OUTPUT", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurpleAccent, letterSpacing: 1.5)))
+                : isMerge 
+                  ? const Center(child: Text("MERGE", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.yellowAccent, letterSpacing: 1.5)))
+                  : Column(
                     children:[
                       Container(
                         height: 32, width: double.infinity, alignment: Alignment.center,
                         decoration: BoxDecoration(color: headerColor, borderRadius: BorderRadius.vertical(top: Radius.circular(borderRadius))),
                         child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: Text((index > 0 ? "#$index " : "") + node.title.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.white), overflow: TextOverflow.ellipsis)),
                       ),
-                      Expanded(child: Padding(padding: const EdgeInsets.all(12.0), child: Align(alignment: Alignment.topLeft, child: Text.rich(_getPreviewSpan(node.content), overflow: TextOverflow.fade)))),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: Text.rich(
+                              _getPreviewSpan(node.content),
+                              overflow: TextOverflow.fade,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
 
               ...inputPorts,
 
-              if (!isOutput)
+              if (!isOutput && !isOllama)
                 Positioned(
                   bottom: -20, left: 0, right: 0,
                   child: Center(
@@ -299,7 +341,7 @@ class _NodeVisualState extends State<NodeVisual> {
                   ),
                 ),
                 
-              if (!isOutput && !isMerge && node.nextNodeIds.length > 1)
+              if (node.type == NodeType.scene && node.nextNodeIds.length > 1)
                 Positioned(
                   bottom: -35, right: 0,
                   child: Container(
@@ -350,7 +392,8 @@ class ConnectionPainter extends CustomPainter {
     }
     
     if (state.draggingWireHead != null && state.draggingWireSourceId != null) {
-      final source = state.nodes[state.draggingWireSourceId!]!;
+      final source = state.nodes[state.draggingWireSourceId!];
+      if (source == null) return;
       paint.color = state.isInvalidCycle ? Colors.red : (state.hoveredTargetId != null ? Colors.white : Colors.white54);
       if (state.hoveredSwapTargetId != null) paint.color = Colors.purpleAccent;
       paint.strokeWidth = 3.0;
@@ -379,7 +422,9 @@ class ConnectionPainter extends CustomPainter {
     double dist = (end.dy - start.dy).abs();
     double control = dist < 80 ? 40.0 : dist * 0.5;
     path.cubicTo(start.dx, start.dy + control, end.dx, end.dy - control, end.dx, end.dy);
-    final metric = path.computeMetrics().first;
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return;
+    final metric = metrics.first;
     final dashedPath = Path();
     for (double d = 0; d < metric.length; d += 20) dashedPath.addPath(metric.extractPath(d, d + 10), Offset.zero);
     canvas.drawPath(dashedPath, paint);
@@ -403,8 +448,8 @@ class _LassoPainter extends CustomPainter {
   _LassoPainter(this.rect);
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.blue.withOpacity(0.1);
-    final border = Paint()..color = Colors.blue.withOpacity(0.5)..style = PaintingStyle.stroke;
+    final paint = Paint()..color = Colors.blue.withValues(alpha: 0.1);
+    final border = Paint()..color = Colors.blue.withValues(alpha: 0.5)..style = PaintingStyle.stroke;
     canvas.drawRect(rect, paint); canvas.drawRect(rect, border);
   }
   @override
@@ -431,7 +476,7 @@ class _GridPainter extends CustomPainter {
   _GridPainter(this.dx, this.dy, this.scale);
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.05)..strokeWidth = 1.0;
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.05)..strokeWidth = 1.0;
     final gridStep = 150.0 * scale;
     double startX = (dx % gridStep) - gridStep;
     double startY = (dy % gridStep) - gridStep;
