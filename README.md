@@ -32,6 +32,20 @@ The graph is not simply an outline of the document.
 
 **The graph is the document structure.**
 
+## Looking for the Simpler Version?
+
+If you want the core visual writing experience without setting up Piper, local voice models, or Ollama, start with **Node Writer**:
+
+https://github.com/nathanfx330/node-writer
+
+Node Writer is the simpler version of the project and requires much less setup.
+
+**Node Writer Plus** is the expanded development version that brings together Node Writer, EchoText, and local model processing. It adds substantially more capability, but some of those features currently require manual setup, especially the Piper runtime and voice model directories.
+
+If you primarily want to write with the visual node graph, Node Writer is the easier place to start.
+
+If you want local voice, compiled manuscript playback, Ollama outputs, authorial constraints, and the broader experimental writing environment, continue with Node Writer Plus.
+
 ## Where Node Writer Plus Comes From
 
 Node Writer Plus brings together ideas and working systems developed across three projects.
@@ -57,7 +71,7 @@ That includes:
 * Playback from a selected location
 * Follow along highlighting
 * Adjustable speech speed
-* Multi speaker model support
+* Multiple speaker model support
 * CUDA acceleration
 * WAV rendering
 * SRT subtitle generation
@@ -687,6 +701,10 @@ flutter doctor
 Piper and Ollama are optional.
 
 The core writing graph works without either one.
+
+If you do not want to assemble the additional local voice and model environment, the original Node Writer is the easier starting point:
+
+https://github.com/nathanfx330/node-writer
 
 ### Clone Node Writer Plus
 
