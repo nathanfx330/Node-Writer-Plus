@@ -1,466 +1,833 @@
-# Node Writer
+# Node Writer Plus
 
-🌐 https://nathanfx330.github.io/blog/posts/node-writer/
+**Node Writer Plus** is a nonlinear desktop writing environment built with Flutter.
 
-![Node Writer Screenshot](https://nathanfx330.github.io/blog/posts/node-writer/nw-3.png)
+Instead of treating a manuscript as one long document, Node Writer Plus breaks writing into connected units arranged on a visual canvas.
 
-**Node Writer** is a distraction-free, nonlinear writing environment built with Flutter.
+Scenes contain the writing.
 
-Instead of forcing a manuscript into one long document, Node Writer lets you write in **Scene nodes**, arrange those scenes spatially, connect them into a graph, and compile the path into a linear manuscript when you need it.
+Connections define structure.
 
-The graph is not just an outline. It is the structure of the document.
+Merge nodes determine how independent sections come together.
 
-Node Writer also integrates local **Piper text-to-speech** and **Ollama** tools without giving either system ownership of the writing. Voice playback follows the manuscript while you edit, and Ollama works through output nodes that inspect the compiled text at whatever point they are attached.
+Final Output compiles the graph into a linear manuscript.
 
----
+EchoText based Piper tools can read that manuscript aloud locally.
 
-## Core Model
+Node Leaf inspired local model tools can examine it through Ollama.
 
-Node Writer deliberately keeps the graph simple.
+The basic model is:
+
+```text
+WRITE
+  ↓
+STRUCTURE
+  ↓
+COMPILE
+  ↓
+LISTEN / REVIEW / PROCESS
+```
+
+The graph is not simply an outline of the document.
+
+**The graph is the document structure.**
+
+## Where Node Writer Plus Comes From
+
+Node Writer Plus brings together ideas and working systems developed across three projects.
+
+### Node Writer
+
+Node Writer provides the foundation.
+
+It introduced the visual writing model in which manuscript text lives inside writing nodes and the relationships between those nodes determine the structure of the finished document.
+
+Instead of outlining a manuscript in one place and writing it somewhere else, the structure and the writing occupy the same workspace.
+
+### EchoText
+
+EchoText provides the foundation of the Voice system.
+
+EchoText was built around local Piper neural voices and developed the playback and rendering workflow that is now integrated into Node Writer Plus.
+
+That includes:
+
+* Local ONNX voices
+* Sentence based playback
+* Playback from a selected location
+* Follow along highlighting
+* Adjustable speech speed
+* Multi speaker model support
+* CUDA acceleration
+* WAV rendering
+* SRT subtitle generation
+* Long form rendering
+* Sentence timing and audio cleanup
+
+In Node Writer Plus, those tools are no longer attached to one large text document.
+
+They can operate on an individual Scene or on a complete manuscript assembled from the graph.
+
+### Node Leaf
+
+Node Leaf contributes the local model processing approach.
+
+Models are treated as tools attached to structured information rather than as replacements for the underlying material.
+
+Node Writer Plus applies that idea to writing.
+
+Ollama does not become the document.
+
+Instead, an Ollama Output receives the manuscript that reaches a particular point in the graph and performs a defined task against that compilation.
+
+This makes local model processing part of the document architecture rather than a chatbot sitting beside the editor.
+
+### The Convergence
+
+Node Writer Plus is where those three systems meet.
+
+```text
+NODE WRITER
+Visual writing and manuscript structure
+        ↓
+NODE WRITER PLUS
+        ↑
+ECHOTEXT                    NODE LEAF
+Local voice                 Local model processing
+```
+
+The result is not simply Node Writer with voice and model buttons added to it.
+
+The writing remains the source of truth.
+
+The graph controls structure.
+
+EchoText's voice system can perform the writing aloud.
+
+The Node Leaf inspired processing layer can examine the writing.
+
+Neither system needs to take ownership of the manuscript.
+
+## The Node Model
+
+Node Writer Plus deliberately uses a small set of node types.
 
 ### Scene
 
-The **Scene** is the universal writing node.
+A Scene is the universal writing node.
 
-A Scene contains the actual manuscript text. The name is customizable in **Settings → Formatting**, so the same node can be presented as a Scene, Paragraph, Passage, Section, Beat, Card, or another preferred writing unit.
+It contains manuscript text.
 
-Scene nodes provide:
+The name of the writing unit can be changed in Settings, allowing the same node to represent different kinds of work.
 
-- Full writing editor
-- Line numbers
-- **bold** and *italic* formatting
-- Search
-- Follow-along TTS highlighting
-- Double-click to read from a sentence
-- Authorial protection for selected text
-- Visual graph connections
+Available names currently include:
+
+* Scene
+* Passage
+* Paragraph
+* Section
+* Beat
+* Card
+* Header
+
+Scene nodes provide the main writing environment, including:
+
+* Line numbers
+* Bold formatting
+* Italic formatting
+* Text alignment
+* Multiple editor font styles
+* Find within the current Scene
+* Piper playback from the editor
+* Follow along speech highlighting
+* Authorial protection for selected text
+* Visual graph connections
+
+The Scene is where authorship happens.
 
 ### Merge
 
-A **Merge** node combines parallel branches into a single ordered flow.
+A Merge node combines separate writing paths into one ordered flow.
 
-It is useful when several writing paths need to converge before continuing into another Scene or Output.
+Each Merge provides three ordered inputs.
+
+The left input is compiled first.
+
+The center input follows.
+
+The right input is compiled last.
+
+```text
+SECTION A ───╮
+SECTION B ───┼→ MERGE → NEXT SECTION
+SECTION C ───╯
+```
+
+This allows sections to be developed independently on the canvas and deliberately assembled when their final relationship becomes clear.
+
+Merge order is structural.
+
+The physical organization of the canvas therefore has a direct relationship to the resulting manuscript.
 
 ### Final Output
 
-**FINAL OUTPUT** is a terminal compilation node.
+FINAL OUTPUT is the manuscript sink.
 
-It shows the complete manuscript feeding that point in the graph and provides document-level tools such as Piper voice playback and Ollama spell checking.
+It compiles every Scene that reaches it into a linear document according to the graph.
+
+From Final Output you can:
+
+* Read the compiled manuscript
+* Jump from the preview back to individual Scenes
+* Copy the manuscript
+* Export the manuscript as text or Markdown
+* Listen to the complete manuscript with Piper
+* Render the manuscript to WAV
+* Generate optional SRT subtitles
+* Run an Ollama assisted spell check
+
+Final Output does not contain manuscript prose of its own.
+
+It represents the document produced by the graph.
 
 ### Ollama Output
 
-An **OLLAMA OUTPUT** is also terminal.
+OLLAMA OUTPUT is a terminal processing node.
 
-It does **not** contain manuscript prose and it does not become part of the writing chain.
-
-Attach one anywhere in the graph and it receives the manuscript compiled **up to that exact point**:
+Connect one at any point in the graph and it receives the manuscript compiled up to that exact point.
 
 ```text
-Scene 1 → Scene 2 → Scene 3 → FINAL OUTPUT
-                    │
-                    └────────→ OLLAMA OUTPUT
+SCENE 1 → SCENE 2 → SCENE 3 → FINAL OUTPUT
+                     │
+                     └────────→ OLLAMA OUTPUT
 ```
 
-The Ollama Output can then analyze, critique, summarize, question, or otherwise work with that snapshot without rewriting the Scene nodes.
+An Ollama Output can then be given its own question or instruction.
 
-This makes it possible to place several Ollama outputs at different points in a project for different editorial questions.
-
----
-
-## Features
-
-### Infinite Canvas
-
-Pan and zoom freely to organize writing in open space.
-
-### Visual Document Graph
-
-Connect Scene nodes with Bézier curves and use the graph itself to define manuscript flow.
-
-Disconnected material can remain on the canvas without appearing in a compiled output.
-
-### Ordered Merges
-
-Merge multiple branches into one intentional linear sequence.
-
-### Live Compilation
-
-Selecting an Output node shows the manuscript compiled from the writing feeding that point.
-
-### Compiled Output Shape
-
-**Settings → Formatting** controls what copied and exported text looks like:
-
-- Node titles as ALL CAPS headings, on or off
-- A horizontal rule between nodes, on or off
-
-Ollama always receives headings regardless of this setting, because a model reading the document benefits from seeing its structure, while a manuscript export usually should not carry editor scaffolding.
-
-### Custom Writing Terminology
-
-Rename the universal writing node to fit the project:
-
-- Scene
-- Paragraph
-- Passage
-- Section
-- Beat
-- Card
-- Header
-
-### Rich Text Lite
-
-Use lightweight Markdown-style emphasis while keeping the editor clean:
-
-- `**bold**`
-- `*italic*`
-
-### Line Numbers
-
-Scene editors include stable logical line numbers in the gutter.
-
-These refer to actual newline-delimited manuscript lines rather than visual wrapping, so references remain stable when the panel is resized.
-
-### Find in Scene
-
-Use the magnifying-glass control or `Ctrl+F` to search the current Scene.
-
-Matches are highlighted directly in the editor and can be stepped through without moving search keystrokes into the manuscript.
-
----
-
-## Voice: Piper TTS
-
-Scene writing has a **WRITE | VOICE** workflow.
-
-Piper runs locally and can read either a Scene or compiled manuscript without sending writing to an online speech service.
-
-Voice features include:
-
-- Sentence-by-sentence playback
-- Follow-along highlighting
-- Caret and editor scrolling that follow the spoken sentence
-- Double-click a sentence to begin reading there
-- Stop playback directly from the editor
-- Voice-model selection
-- Adjustable speech speed
-- Optional speaker ID
-- CUDA/GPU provider test
-- WAV rendering
-- Optional SRT subtitle generation
-- Prefetched sentence generation for smoother playback
-
-When compiled playback crosses into another Scene, Node Writer can follow the active Scene in the graph.
-
-### Piper Runtime Layout
-
-Piper is optional and is not bundled in the repository.
-
-During development, place the Piper runtime and voice models beside the Flutter project:
-
-```text
-node-writer/
-├── lib/
-├── linux/
-├── pubspec.yaml
-│
-├── piper/
-│   ├── piper
-│   └── ...Piper runtime libraries
-│
-└── model/
-    ├── voice-name/
-    │   ├── voice.onnx
-    │   └── voice.onnx.json
-    └── ...
-```
-
-On Windows, the executable is expected as:
-
-```text
-piper/piper.exe
-```
-
-For a packaged application, Node Writer also checks for `piper/` and `model/` beside the application executable.
-
----
-
-## Ollama
-
-Node Writer can use a locally running Ollama server as an editorial processor.
-
-Ollama settings are global and live in:
-
-**Settings → Ollama**
-
-Configure:
-
-- Ollama host
-- Default model
-- Shared system prompt
-
-The default local Ollama host is:
-
-```text
-http://localhost:11434
-```
-
-Node Writer discovers locally available models from the Ollama server.
-
-### Ollama Outputs
-
-An Ollama Output receives the exact compiled manuscript feeding its position in the graph.
-
-Its side panel provides:
-
-- The compiled input
-- A node-specific **Ask**
-- Run control
-- Ollama's returned result
-
-The result is editorial output, not manuscript text. Nothing is silently inserted into Scene nodes.
-
-Example asks:
+For example:
 
 ```text
 Where does this argument become repetitive?
 ```
 
 ```text
-Challenge the logic of this section without rewriting it.
+Identify claims that need stronger evidence.
 ```
 
 ```text
-List the claims here that need stronger evidence.
+Critique the transition between these sections.
 ```
 
 ```text
-Give me three ways this transition could be clearer.
+What questions would a skeptical reader ask here?
 ```
 
----
+```text
+Summarize the argument established up to this point.
+```
+
+The returned result is editorial output.
+
+It does not silently replace or rewrite the Scene nodes that supplied the manuscript.
+
+Several Ollama Outputs can therefore exist at different points in the same project, each examining a different manuscript state or answering a different editorial question.
+
+## Visual Writing
+
+Node Writer Plus uses a large spatial canvas for arranging manuscript pieces.
+
+Writing can be moved visually, connected, disconnected, branched, reorganized, and merged.
+
+Unused material can remain nearby without becoming part of a compiled manuscript.
+
+Only writing that reaches the selected Output is compiled.
+
+That means material does not need to be deleted simply because it is not currently part of the document.
+
+It can remain on the canvas as an alternate passage, discarded idea, possible branch, research note, or section waiting to be placed.
+
+The canvas and the editor remain connected.
+
+Selecting a Scene opens its writing environment.
+
+Selecting Final Output opens the compiled manuscript.
+
+Selecting an Ollama Output shows the manuscript feeding that node and provides its model workspace.
+
+## Writing Environment
+
+The right side panel serves as the primary writing surface.
+
+It can be resized for editing and expanded into a wider writing layout while preserving access to the visual canvas.
+
+Scene editing currently includes:
+
+* Stable logical line numbers
+* Bold and italic Markdown style formatting
+* Left alignment
+* Center alignment
+* Right alignment
+* Modern display style
+* Classic display style
+* Typewriter display style
+* Search with match navigation
+* Direct Piper playback
+* Double click playback from the current sentence
+* Authorial protection controls
+
+Search operates inside the selected Scene.
+
+Match navigation keeps keyboard focus inside the search field so search text does not accidentally enter the manuscript.
+
+## Manuscript Compilation
+
+Node Writer Plus compiles the graph toward a selected Output.
+
+The compiler walks the upstream graph, resolves Merge ordering, gathers Scene content, and produces a linear manuscript.
+
+Writing that does not reach the target is not included.
+
+Compilation also preserves information about protected authorial spans so those protections continue to exist after multiple Scenes become one document.
+
+### Output Formatting
+
+Settings can control the author facing shape of compiled text.
+
+You can currently choose whether exported text includes:
+
+* Scene titles as headings
+* Horizontal rules between Scenes
+
+Ollama receives structural headings regardless of the author facing export setting.
+
+This allows a model to understand where sections begin and end without forcing those same structural markers into a finished manuscript export.
+
+The manuscript intended for the author and the manuscript intended for local model processing can therefore use different presentation rules while coming from the same graph.
+
+## Voice
+
+The Voice workspace is based on the Piper system developed in EchoText.
+
+Piper runs locally.
+
+The manuscript does not need to be sent to an online speech service.
+
+Voice can operate on either:
+
+* The selected Scene
+* The compiled manuscript
+
+Selecting Final Output automatically makes the complete manuscript feeding that Output the Voice source.
+
+## Follow Along Playback
+
+Speech is generated in sentence sized chunks.
+
+As Piper moves through the manuscript, Node Writer Plus tracks the passage currently being spoken.
+
+During compiled playback it can follow the manuscript across Scene boundaries.
+
+When playback reaches another Scene, the application can:
+
+* Select that Scene
+* Center it on the canvas
+* Highlight the spoken passage
+* Move the editor caret with playback
+* Scroll the editor toward the active sentence
+
+Double clicking inside a Scene can begin playback from the sentence at that location.
+
+Playback can also be stopped directly from the writing interface.
+
+## Voice Controls
+
+The current Voice implementation includes:
+
+* Piper voice selection
+* Custom ONNX voice selection
+* Adjustable speech speed
+* Optional speaker ID
+* Optional CUDA acceleration
+* CUDA capability testing
+* Sentence prefetching
+* Selected Scene playback
+* Compiled manuscript playback
+* Follow along highlighting
+* WAV rendering
+* Optional SRT subtitle generation
+* Render progress
+* Estimated render completion time
+
+The Voice system retains a substantial amount of the long form rendering work developed in EchoText.
+
+## Piper Setup
+
+Piper itself and the voice models are not included with Node Writer Plus.
+
+The repository currently contains a placeholder `piper` directory, but you need to supply the actual Piper runtime.
+
+**For the current development version, the entire Piper runtime needs to be placed directly in the root of the Node Writer Plus project.**
+
+The working development layout is:
+
+```text
+Node-Writer-Plus/
+│
+├── lib/
+├── linux/
+├── windows/
+├── macos/
+├── pubspec.yaml
+│
+├── piper/
+│   ├── piper
+│   ├── espeak-ng-data/
+│   └── Piper runtime libraries
+│
+└── model/
+    ├── Voice A/
+    │   ├── voice.onnx
+    │   └── voice.onnx.json
+    │
+    └── Voice B/
+        ├── another_voice.onnx
+        └── another_voice.onnx.json
+```
+
+On Linux, Node Writer Plus currently expects the executable at:
+
+```text
+Node-Writer-Plus/piper/piper
+```
+
+On Windows:
+
+```text
+Node-Writer-Plus/piper/piper.exe
+```
+
+Voice models belong inside folders under:
+
+```text
+Node-Writer-Plus/model/
+```
+
+Node Writer Plus scans those folders for ONNX voice models.
+
+### Linux Permissions
+
+The application attempts to make the Piper executable runnable automatically.
+
+If necessary, this can also be done manually from the project root:
+
+```bash
+chmod +x piper/piper
+```
+
+### Current Piper Status
+
+The Piper integration is functional on the primary Linux development machine using the directory structure above.
+
+It still needs portability and packaging work.
+
+The current Node Writer Plus build configuration should not yet be assumed to bundle the Piper runtime and voice models automatically into every release build.
+
+That part of the EchoText packaging system still needs to be properly integrated and tested here.
+
+For now, when running Node Writer Plus from source, keep the complete Piper runtime in the project root exactly as shown above.
+
+**It works, but it still needs love.**
+
+## Ollama
+
+Ollama support is optional.
+
+Node Writer Plus uses Ollama as a local manuscript processing system.
+
+By default the application expects a local Ollama server at:
+
+```text
+http://localhost:11434
+```
+
+The Ollama settings panel allows you to configure:
+
+* Ollama host
+* Default model
+* Shared system prompt
+
+Available models are discovered from the configured Ollama server.
+
+Because the host is configurable, Ollama can also run somewhere else on a local network.
+
+## Ollama Outputs
+
+An Ollama Output receives the exact manuscript compilation feeding its point in the graph.
+
+Its workspace contains:
+
+* The compiled manuscript input
+* A node specific Ask
+* A Run control
+* The returned result
+
+The Ask belongs to that Ollama Output and is saved with the project.
+
+The generated result is stored separately from the authored manuscript.
+
+This allows local models to act as readers, critics, researchers, proofreaders, or analytical tools without silently modifying the underlying Scenes.
 
 ## Authorial Constraints
 
-Node Writer is designed around a simple principle:
+Node Writer Plus treats model assistance and model authorship as different things.
 
-> AI assistance does not imply AI authorship permission.
+Selected text inside a Scene can be protected before it reaches Ollama.
 
-Select text inside a Scene and right-click to protect it from downstream Ollama operations.
+There are two kinds of authorial protection.
 
-### Protect Exact Wording
+### Exact Wording
 
-**Protect from Ollama — exact wording** marks text whose characters belong entirely to the author.
+Exact protection means the characters themselves belong to the author and must not be rewritten.
 
-Before generation, Node Writer replaces each protected passage with an opaque token. After generation it restores the original characters. Ollama never gets an opportunity to retype the protected words, because it never receives them in the editable body of the document.
+Before protected manuscript text passes through an editable Ollama workflow, the protected passage is replaced with an opaque token.
 
-Enforcement differs by operation, because the two operations are asking for different things:
+The model works around that token rather than receiving permission to rewrite the protected characters.
 
-- **Manuscript-returning operations** such as spell check must return a complete document, so every token has to come back exactly once. A missing, duplicated, or invented token means the passage changed, and the result is **rejected** rather than restored.
-- **Analysis operations**, such as an Ollama Output asking a question, are not returning the manuscript. A token that does not appear is normal. Duplicated or invented tokens are reported as a warning alongside the result.
+When a complete document operation returns, Node Writer Plus validates the tokens before restoring the original wording.
 
-### Edits release locks
+For manuscript returning operations, a protected token must return exactly once.
 
-An exact lock is a claim about specific characters. If an edit overwrites part of a protected span, Node Writer releases that lock and says so, rather than silently re-anchoring an authorship guarantee onto whatever replaced it. Editing before or after a lock moves it normally.
+If a token is:
 
-### Protect Meaning / Claim
+* Missing
+* Duplicated
+* Altered
+* Invented
 
-**Protect meaning / claim** tells Ollama that the proposition itself is an authorial constraint.
+the result is rejected rather than silently repaired.
 
-Ollama may analyze or criticize the claim, but editorial operations are instructed not to:
+Exact wording protection is therefore not only an instruction inside a prompt.
 
-- Reverse it
-- Weaken it
-- Strengthen it
-- Change its scope
-- Change its certainty
-- Reinterpret its intended meaning
+It also has a mechanical enforcement layer.
 
-Meaning protection is semantic rather than mechanically absolute, so manuscript-returning operations can perform a second verification pass and report a protected claim as:
+### Meaning / Claim
 
-- `PRESERVED`
-- `CHANGED`
-- `UNCERTAIN`
+Meaning protection applies to the proposition rather than the exact wording.
 
-Authorial constraints are saved with the Node Writer project and travel downstream with the compiled manuscript.
+The model may analyze or criticize a protected claim when explicitly asked to do so.
 
----
+Editorial operations are instructed not to change its:
+
+* Direction
+* Scope
+* Certainty
+* Emphasis
+* Intended meaning
+
+For manuscript editing operations, Node Writer Plus can perform a second semantic verification pass.
+
+Protected claims can be reported as:
+
+```text
+PRESERVED
+CHANGED
+UNCERTAIN
+```
+
+Exact protection and meaning protection therefore serve different purposes.
+
+One protects characters.
+
+The other protects the author's proposition.
+
+## Editing Protected Text
+
+An authorial lock belongs to the material that was explicitly protected.
+
+If the author later edits directly through a protected span, Node Writer Plus releases that protection rather than silently moving an authorship guarantee onto replacement text.
+
+Editing before or after the protected passage moves its location normally.
+
+When an edit causes a protection to be released, the application reports that release to the author.
 
 ## Ollama Spell Check
 
-FINAL OUTPUT includes an Ollama-powered spell-check workflow.
+Final Output includes an Ollama assisted proofreading workflow.
 
-The copy-edit instruction is intentionally narrow. It asks Ollama to correct:
+The instruction is intentionally narrow.
 
-- Spelling
-- Grammar
-- Punctuation
-- Capitalization
-- Obvious typographical errors
+The model is asked to correct:
+
+* Spelling
+* Grammar
+* Punctuation
+* Capitalization
+* Obvious typographical errors
 
 while preserving:
 
-- Wording
-- Voice
-- Meaning
-- Paragraph structure
-- Headings
-- Markdown
+* Wording
+* Voice
+* Meaning
+* Paragraph structure
+* Headings
+* Markdown
 
-The corrected manuscript opens for review rather than silently overwriting Scene nodes.
+The corrected manuscript opens in a review window.
 
-Exact author locks are mechanically enforced during this process, and protected meaning claims can be checked after generation.
+The source Scenes remain untouched.
 
----
+Nothing is silently written back into the manuscript.
 
-## Saving
+If exact authorial locks exist, they are validated before the corrected result is accepted for review.
 
-Node Writer writes through a temporary file and renames it into place, so an interrupted or failed write cannot truncate an existing project. The previous version of the file is kept alongside it as `projectname.nw.bak`.
+If meaning locks exist, they can receive a second preservation check.
 
-Save results are reported in the interface. A failed save is never silent.
+The author remains responsible for deciding whether to use the returned correction.
 
-A dot beside the project name in the title bar means there are changes that are not on disk. **New** and **Open** will offer to save before discarding them.
+## Export
 
----
+Compiled manuscripts can be copied directly from Final Output.
 
-## Development
+They can also be exported as:
 
-### Tests
-
-```bash
-flutter test
+```text
+.txt
+.md
 ```
 
-The suite covers the parts where a silent regression would be expensive:
+Voice rendering can produce:
 
-- Sentence chunking, asserting that chunk offsets tile the document exactly. Follow-along highlighting depends on that invariant.
-- Authorial constraint remapping across insert, delete, and overwrite edits, including the release-on-overwrite rule.
-- Graph compilation order, merge port ordering, and termination on a cyclic project file.
-- Harness token substitution, restoration, and every rejection path.
-
-### Static analysis
-
-```bash
-flutter analyze
+```text
+.wav
 ```
 
-`analysis_options.yaml` treats a dropped `Future` and an unguarded `BuildContext` across an `await` as errors, since in this codebase both mean a lost save or an orphaned process.
+and optionally:
 
----
+```text
+.srt
+```
+
+The SRT workflow uses the same sentence based rendering path used by Voice so subtitle timing follows the generated speech.
+
+## Project Files
+
+Node Writer Plus projects use the `.nw` format.
+
+A project stores information including:
+
+* Scene text
+* Node titles
+* Node positions
+* Graph connections
+* Merge structure
+* Writing unit terminology
+* Formatting preferences
+* Ollama asks
+* Ollama results
+* Authorial constraints
+* Compiled output preferences
+
+## Saving and Manuscript Safety
+
+Writing software should never treat a failed save as a minor error.
+
+Node Writer Plus therefore avoids directly truncating the existing project before a replacement is ready.
+
+A save is first written to a temporary file.
+
+When an existing project is replaced, the previous copy is preserved alongside it as:
+
+```text
+project.nw.bak
+```
+
+The interface also tracks whether the current project contains changes that have not reached disk.
+
+An unsaved indicator appears beside the project name.
+
+Starting a new project or opening another project while unsaved work exists produces a warning.
+
+The author can:
+
+* Cancel
+* Save first
+* Explicitly discard the changes
+
+Save failures are reported through the interface.
+
+They are not intentionally allowed to disappear silently into a debug log.
+
+## Undo
+
+Node Writer Plus maintains an undo history for graph and writing operations.
+
+Continuous typing and similar repeated actions are grouped so normal writing does not generate an unusable undo entry for every character.
+
+The current project state supports up to 100 stored undo snapshots.
 
 ## Getting Started
 
-### Prerequisites
+### Requirements
 
-Install Flutter:
+Node Writer Plus is built with Flutter and currently targets desktop use.
 
-https://flutter.dev/docs/get-started/install
+The current project uses Dart:
 
-Verify the installation:
+```text
+^3.11.3
+```
+
+Install Flutter and verify the environment with:
 
 ```bash
 flutter doctor
 ```
 
-Piper and Ollama are optional. Node Writer's core graph editor works without either one.
+Piper and Ollama are optional.
 
-For Ollama features, install Ollama separately, start the local server, and make sure at least one model is available.
+The core writing graph works without either one.
 
----
-
-### Clone the Repository
+### Clone Node Writer Plus
 
 ```bash
-git clone https://github.com/nathanfx330/node-writer.git
-cd node-writer
+git clone https://github.com/nathanfx330/Node-Writer-Plus.git
+cd Node-Writer-Plus
 ```
 
-### Fetch Dependencies
+### Install Flutter Dependencies
 
 ```bash
 flutter pub get
 ```
 
-### Run
-
-```bash
-flutter run
-```
-
-For Linux specifically:
+### Run on Linux
 
 ```bash
 flutter run -d linux
 ```
 
----
-
-## Clean Rebuild
-
-When native dependencies or Flutter plugins have changed, a clean rebuild can help:
+Or allow Flutter to choose an available target:
 
 ```bash
-flutter clean
-rm -rf .dart_tool build
-flutter pub get
+flutter run
+```
+
+## Building
+
+### Linux
+
+```bash
+flutter build linux
+```
+
+For a release build:
+
+```bash
 flutter build linux --release
 ```
 
-The Linux release bundle is generated under:
+The Linux release bundle is normally generated under:
 
 ```text
 build/linux/x64/release/bundle/
 ```
 
----
-
-## Build Release Versions
-
 ### Windows
+
+```bash
+flutter build windows
+```
+
+For a release build:
 
 ```bash
 flutter build windows --release
 ```
 
-### Linux
+### macOS
 
 ```bash
-flutter build linux --release
+flutter build macos
 ```
 
-### macOS
+For a release build:
 
 ```bash
 flutter build macos --release
 ```
 
----
+Linux is currently the primary development environment for Node Writer Plus.
 
-## Philosophy
+The repository includes Windows and macOS Flutter targets, but the current Plus codebase should not yet be treated as equally verified on every platform.
 
-Node Writer separates three things that conventional word processors tend to collapse together:
+Piper packaging in particular still requires additional platform work.
+
+## Development Status
+
+Node Writer Plus is active development software.
+
+The main writing, graph compilation, Piper integration, Ollama Output system, authorial constraints, and compiled export workflows are implemented.
+
+Some infrastructure in the repository is ahead of what is currently wired into the application.
+
+For example, work exists toward broader session recovery and automatic recovery snapshots, but that system should not yet be considered part of the active user facing feature set until it is fully connected and tested.
+
+Platform packaging also needs further work, especially around distributing Piper and voice models cleanly with release builds.
+
+## Current Testing Note
+
+The current repository does not yet have a mature automated test suite representing the full Node Writer Plus feature set.
+
+Testing infrastructure and regression coverage are areas that still need development.
+
+The existing application behavior has primarily been developed and exercised interactively on the primary development machine.
+
+## Why Plus Exists
+
+The original Node Writer established the visual writing model.
+
+Node Writer Plus extends that idea into a broader writing environment.
+
+The important separation is:
 
 ```text
-WRITING
-    ↓
-STRUCTURE
-    ↓
-OUTPUT / PROCESSING
+AUTHOR
+  ↓
+SCENES
+  ↓
+GRAPH
+  ↓
+COMPILED MANUSCRIPT
+  ↓
+OUTPUT TOOLS
 ```
 
-**Scene nodes** are where the author writes.
+Scenes contain authored text.
 
-**The graph** determines how that writing relates and compiles.
+The graph defines how that text becomes a document.
 
-**Output nodes** observe the resulting manuscript without becoming manuscript themselves.
+Final Output compiles it.
 
-Piper can perform the writing aloud.
+EchoText's Piper system can perform it aloud.
 
 Ollama can inspect it.
 
-Neither one needs to become the author.
+Authorial constraints define what a model is allowed to alter.
 
----
+These systems are intentionally separate.
+
+A voice engine does not need to become an editor.
+
+A local model does not need to become an author.
+
+A graph does not need to replace prose.
+
+Node Writer Plus is built around keeping those responsibilities distinct while still allowing them to work together.
+
+The goal is not simply to build a word processor with local AI attached to the side.
+
+The goal is to build a writing environment where **authorship, structure, voice, and machine assistance remain separate enough that the author decides exactly how they interact.**
 
 ## License
 
@@ -468,20 +835,9 @@ MIT License
 
 Copyright (c) 2026 Nathaniel Westveer
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is furnished
-to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
